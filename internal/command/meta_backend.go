@@ -670,17 +670,20 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, tfdiags.Di
 		}
 		log.Printf("[TRACE] Meta.Backend: backend configuration has changed (from type %q to type %q)", s.Backend.Type, c.Type)
 
-		initReason := ""
-		switch {
-		case c.Type == "cloud":
-			initReason = fmt.Sprintf("Backend configuration changed from %q to Terraform Cloud", s.Backend.Type)
-		case s.Backend.Type != c.Type:
-			initReason = fmt.Sprintf("Backend configuration changed from %q to %q", s.Backend.Type, c.Type)
-		default:
-			initReason = fmt.Sprintf("Backend configuration changed for %q", c.Type)
-		}
-
 		if !opts.Init {
+			initReason := ""
+
+			switch {
+			case s.Backend.Type != c.Type:
+				if c.Type == "cloud" {
+					initReason = fmt.Sprintf("Backend configuration changed from %q to Terraform Cloud", s.Backend.Type)
+				} else {
+					initReason = fmt.Sprintf("Backend configuration changed from %q to %q", s.Backend.Type, c.Type)
+				}
+			default:
+				initReason = fmt.Sprintf("Backend configuration changed for %q", c.Type)
+			}
+
 			if c.Type == "cloud" {
 				diags = diags.Append(tfdiags.Sourceless(
 					tfdiags.Error,
